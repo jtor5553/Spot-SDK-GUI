@@ -1,3 +1,4 @@
+#Main Code for spot GUI
 import tkinter as tk
 from tkinter import ttk
 from tkinter import *
