@@ -1,4 +1,3 @@
-#A simple test Button
 import tkinter as tk
 from subprocess import call
 
@@ -13,7 +12,7 @@ def runHelloSpot():
     
 root = tk.Tk()
 
-#Box Size
+#Box Size 
 root.geometry("500x500")
 root.title("Spot GUI")
 
