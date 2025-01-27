@@ -64,6 +64,10 @@ def installForALL():
         exampleInstall = "visualizer"
     elif install == "Get Mission State":
         exampleInstall = "get_mission_state"
+    elif install == "Spotlight":
+        exampleInstall = "spot_light"
+    elif install == "WASD":
+        exampleInstall = "wasd"
     else:
         status_label.config(text="Couldn't Install Dependencies")
         return
@@ -149,15 +153,15 @@ def runSelectedProgram():
         state = 'metrics'
     elif selected == "Get Front Left Image":
         location = "get_image"
-        script = "get_image.py"
+        script = "image_viewer.py"
         camera = "frontleft_fisheye_image"
     elif selected == "Get Front Right Image":
         location = "get_image"
-        script = "get_image.py"
+        script = "image_viewer.py"
         camera = "frontright_fisheye_image"
     elif selected == "Get Back Image":
         location = "get_image"
-        script = "get_image.py"
+        script = "image_viewer.py"
         camera = "Back_fisheye_image"
     elif selected == "Get Mission State":
         location = "get_mission_state"
@@ -179,7 +183,15 @@ def runSelectedProgram():
     elif selected == "Reset Safety Stop":
         location = "reset_safety_stop"
         script = "reset_primary_safety_stop.py"
-
+    elif selected == "Spotlight":
+        location ="spot_light"
+        script ="spot_light.py"
+    elif selected == "WASD":
+        location ="wasd"
+        script = "wasd.py"
+    else:
+        status_label.config(text="Couldn't Find Example")
+        return
     current_directory = os.path.dirname(os.path.abspath(__file__))
     parent_directory = os.path.dirname(current_directory)
     script_path = os.path.join(parent_directory, generalPath, location, script)
@@ -287,7 +299,9 @@ def mainInterface():
         "IR Enable",
         "IR Disable",
         "Reset Safety Stop",
-        "Visualizer"
+        "Visualizer",
+        "Spotlight",
+        "WASD"
     ]
 
     # Programs Dropdown Menu
