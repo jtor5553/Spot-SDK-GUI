@@ -4,6 +4,8 @@ from tkinter import *
 import subprocess, subprocess, sys, os
 from tkinter import PhotoImage
 from PIL import Image, ImageTk
+from bosdyn.client.lease import LeaseClient
+
 
 
 generalPath = os.path.join("spot-sdk-4.0.3", "python", "examples")
@@ -46,9 +48,9 @@ def installForALL():
         exampleInstall = "visualizer"
     elif install == "Directory":
         exampleInstall = "directory"
-    if install == ["Get Robot State", "Get Robot Hardware", "Get Robot Metrics"]:
+    if install in ["Get Robot State", "Get Robot Hardware", "Get Robot Metrics"]:
         exampleInstall = "get_robot_state"
-    elif install == ["Get Front Left Image", "Get Front Left Image", "Get Front Right Image", "Get Back Image"]:
+    elif install in ["Get Front Left Image", "Get Front Left Image", "Get Front Right Image"]:
         exampleInstall = "get_image"
     elif install == "Get World Objects":
         exampleInstall = "get_world_objects"
@@ -92,14 +94,31 @@ def installForALL():
         print(f"Error: requirements.txt not found at {requirements_path}")    
 
 #Terminates any example
+lease_client = None
+lease = None
+
 def stopProgram():
-    global current_process, status_label
+    global current_process, status_label, lease_client, lease
     if current_process:
-        current_process.terminate()
-        current_process = None
-        status_label.config(text="Program Stopped")
+        try:
+            current_process.terminate()
+            current_process.wait()  # Wait for the process to terminate
+            current_process = None
+            status_label.config(text="Program Stopped")
+            print("Process terminated successfully.")
+
+            # Releases the lease after stopping the process
+            if lease_client and lease:
+                lease_client.return_lease(lease)
+                print("Lease returned.")
+                lease = None
+                lease_client = None
+        except Exception as e:
+            status_label.config(text=f"Error stopping process: {str(e)}")
+            print(f"Error stopping process: {str(e)}")
     else:
         status_label.config(text="No program is currently running")
+        print("No program is currently running")
 
 #Starts the Estop
 def startEStop():
@@ -159,10 +178,6 @@ def runSelectedProgram():
         location = "get_image"
         script = "image_viewer.py"
         camera = "frontright_fisheye_image"
-    elif selected == "Get Back Image":
-        location = "get_image"
-        script = "image_viewer.py"
-        camera = "Back_fisheye_image"
     elif selected == "Get Mission State":
         location = "get_mission_state"
         script = "get_mission_state.py"
@@ -195,7 +210,7 @@ def runSelectedProgram():
     current_directory = os.path.dirname(os.path.abspath(__file__))
     parent_directory = os.path.dirname(current_directory)
     script_path = os.path.join(parent_directory, generalPath, location, script)
-
+    
     print(f"Selected: {selected}, Script Path: {script_path}")  
 
     if location != "NULL" and script != "NULL":
@@ -203,7 +218,7 @@ def runSelectedProgram():
 
         if location == "get_robot_state" and state != None :
                 try:
-                    subprocess.Popen([sys.executable, script_path, IP, state])
+                    current_process = subprocess.Popen([sys.executable, script_path, IP, state])
                     status_label.config(text=f"Running {selected}...")
                 except FileNotFoundError:
                     messagebox.showerror("Error", "Python executable not found.")
@@ -211,7 +226,7 @@ def runSelectedProgram():
                     messagebox.showerror("Error", f"Failed to execute the script: {str(e)}")
         if location == "get_image" and camera != None:
                 try:
-                    subprocess.Popen([sys.executable, script_path, IP, "--image-sources", camera])
+                    current_process = subprocess.Popen([sys.executable, script_path, IP, "--image-sources", camera])
                     status_label.config(text=f"Running {selected}...")
                 except FileNotFoundError:
                     messagebox.showerror("Error", "Python executable not found.")
@@ -219,15 +234,16 @@ def runSelectedProgram():
                     messagebox.showerror("Error", f"Failed to execute the script: {str(e)}")
         if location == "disable_ir_emission" and eOr != None:
                 try:
-                    subprocess.Popen([sys.executable, script_path, IP, eOr])
+                    current_process = subprocess.Popen([sys.executable, script_path, IP, eOr])
                     status_label.config(text=f"Running {selected}...")
+                    print(f"Current Process: {current_process}")
                 except FileNotFoundError:
                     messagebox.showerror("Error", "Python executable not found.")
                 except Exception as e:
                     messagebox.showerror("Error", f"Failed to execute the script: {str(e)}")
         else:
             try:
-                subprocess.Popen([sys.executable, script_path, IP])
+                current_process = subprocess.Popen([sys.executable, script_path, IP])
 
                 status_label.config(text=f"Running {selected}...")
             except FileNotFoundError:
@@ -237,6 +253,7 @@ def runSelectedProgram():
     else:
         messagebox.showerror("Error", "Script not found.")
 
+#Username and passowrd input for spot
 def run_with_inputs(username, password, ip):
     if not username or not password or not ip:
         messagebox.showerror("Input Error", "All fields must be filled out!")
@@ -255,9 +272,54 @@ def run_with_inputs(username, password, ip):
     login_window.destroy()  
     mainInterface()
 
+#Text display for every function
+def selectedEvent(event):
+    canvas.delete("label_text")
+    canvas.delete("text_box")
+
+    selected_option = clicked.get()
+
+    box_x1, box_y1 = 10, 175  # Top-left coordinates
+    box_x2, box_y2 = 300, 300  # Bottom-right coordinates
+
+    canvas.create_rectangle(box_x1, box_y1, box_x2, box_y2, fill="white", outline="black", tags="text_box")
+
+    # Display appropriate text over the white box
+    if selected_option == 'Hello Spot':
+        canvas.create_text(153, 225, text="  Spot will stand up, strike a\npose, stand tall, sit down, and\ncapture an image from a\ncamera", fill="black", font=("Arial", 16), tags="label_text")
+    elif selected_option == 'Directory':
+        canvas.create_text(155, 225, text="  This example demonstrates how\nto use Spot’s Directory Client to\nlist, register, update, and remove\ninformation about API services.", fill="black", font =("Arial", 14), tags="label_text")
+    elif selected_option in ["Get Robot State", "Get Robot Hardware", "Get Robot Metrics"]:
+        canvas.create_text(155, 225, text="  Demonstrates how to query the\nrobot state service for the\nhardware config, the current robot\nstate, or the robot metrics.", fill="black", font=("Arial", 14), tags="label_text")
+    elif selected_option in ["Get Front Left Image", "Get Front Left Image", "Get Front Right Image"]:
+        canvas.create_text(155, 225, text="  Can be used to create popup\nwindows which show a live preview\nof the image sources specified.", fill="black", font=("Arial", 13), tags="label_text")
+    elif selected_option == "Get World Objects":
+        canvas.create_text(155, 235, text=" Demonstrates how to use the world\n object service to list the objects\n Spot can detect, and filter\nthese lists for specific objects\nor objects after a certain time stamp. ", fill="black", font=("Arial", 13), tags="label_text")
+    elif selected_option in ["Get Fron", "Get Front Left Image", "Get Front Right Image"]:
+        canvas.create_text(155, 225, text="  Can be used to create popup\nwindows which show a live preview\nof the image sources specified.", fill="black", font=("Arial", 13), tags="label_text")
+    elif selected_option == 'Get Mission State':
+        canvas.create_text(153, 225, text="  Demonstrates how to retrieve\ninformation about the state of the\ncurrently-running mission.", fill="black", font=("Arial", 14), tags="label_text")
+    elif selected_option == 'Time Sync':
+        canvas.create_text(160, 225, text=" Demonstrates how to use the timesync service\nto establish time sync between your computer\nand the robot’s clock. Specifically, it creates\na TimeSyncEndpoint, which can be used to\nestablish timesync as well as determine the\nclockskew or round trip time.", fill="black", font=("Arial", 10), tags="label_text")
+    elif selected_option == 'Comms Test':
+        canvas.create_text(155, 215, text="  Demonstrates how to use the SDK to\nperform comms testing. This is meant to\nbe run on a CORE I/O during an\nAutowalk mission.", fill="black", font=("Arial", 11), tags="label_text")
+    elif selected_option in ["IR Enable", "IR Disable"]:
+        canvas.create_text(158, 225, text="  Demonstrates how to use the\nIREnableDisableServiceClient to\nenable/disable the robot’s IR light\nemitters in the body and hand sensors.", fill="black", font=("Arial", 12), tags="label_text")
+    elif selected_option == 'Reset Safety Stop':
+        canvas.create_text(160, 225, text=" Resets the primary and redundant\nsafety stops on a robot configured\nfor Safety-Related Stopping\nFunction (SRSF)", fill="black", font=("Arial", 12), tags="label_text")
+    elif selected_option == 'Spotlight':
+        canvas.create_text(153, 225, text="  Will allow Spot to respond to a light\nshining in its front left camera", fill="black", font=("Arial", 12), tags="label_text")
+    elif selected_option == 'Visualizer':
+        canvas.create_text(153, 225, text=" Visualizes Spot’s perception scene\nin a consistent coordinate frame.\nIt demonstrates:", fill="black", font=("Arial", 12), tags="label_text")
+    elif selected_option == 'WASD':
+        canvas.create_text(153, 225, text=" Creates an interface for operating\nSpot with your keyboard", fill="black", font=("Arial", 12), tags="label_text")
+    else:
+        canvas.create_text(145, 200, text="No Description found.", fill="black", font=("Arial", 16), tags="label_text")
+
+
 #Main
 def mainInterface():
-    global status_label, clicked, current_process
+    global status_label, clicked, current_process, canvas
     root = tk.Tk()
 
     #GUI Size
@@ -291,7 +353,6 @@ def mainInterface():
         "Get Robot Metrics",
         "Get Front Left Image",
         "Get Front Right Image",
-        "Get Back Image",
         "Get World Objects",
         "Get Mission State",
         "Time Sync",
@@ -307,7 +368,7 @@ def mainInterface():
     # Programs Dropdown Menu
     clicked = StringVar()
     clicked.set(options[0])
-    programs = tk.OptionMenu(root, clicked, *options)
+    programs = tk.OptionMenu(root, clicked, *options, command= selectedEvent)
     programs_window = canvas.create_window(150, 130, width=225, height=60, window=programs)
 
     # Run Button
