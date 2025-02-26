@@ -1,16 +1,55 @@
 import tkinter as tk
+import bosdyn.client
 from tkinter import ttk, StringVar, messagebox
 from tkinter import *
 import subprocess, subprocess, sys, os
 from tkinter import PhotoImage
 from PIL import Image, ImageTk
 from bosdyn.client.lease import LeaseClient
+from bosdyn.client.robot_state import RobotStateClient
 
 
 
 generalPath = os.path.join("spot-sdk-4.0.3", "python", "examples")
 requiredFiles = "requirements.txt"
 current_process = None
+
+
+#Displays the battery percentage of Spot on the top right of the GUI
+def check_battery_status(root):
+    global battery_label, IP
+    
+    username = os.environ.get('BOSDYN_CLIENT_USERNAME')
+    password = os.environ.get('BOSDYN_CLIENT_PASSWORD')
+    
+    if not username or not password or not IP:
+        battery_label.config(text="Invalid Log-In")
+        root.after(60000, check_battery_status, root)  
+        return
+
+    try:
+        sdk = bosdyn.client.create_standard_sdk("Battery Check")
+        robot = sdk.create_robot(IP)
+        robot.authenticate(username, password)
+        
+        state_client = robot.ensure_client(RobotStateClient.default_service_name)
+        robot_state = state_client.get_robot_state()
+
+        battery_states = robot_state.battery_states
+        
+        if battery_states:
+            battery_percentage = battery_states[0].charge_percentage.value
+            battery_label.config(text=f"Battery: {battery_percentage}%")
+        else:
+            # If no battery data is found
+            battery_label.config(text="Battery info unavailable")
+
+    #Error Detection 
+    except Exception as e:
+        battery_label.config(text=f"Error fetching battery info: {str(e)}")
+
+    root.after(60000, check_battery_status, root)
+
 
 
 #Installs Requirements.txt file for estop
@@ -25,10 +64,10 @@ def installForEstop():
     if os.path.exists(requirements_path):
         print(f"Installing dependencies from {requirements_path}...")
 
-        # Install dependencies
+        # Installs dependencies
         result = subprocess.run([sys.executable, "-m", "pip", "install", "-r", requirements_path], capture_output=True, text=True)
         
-        # Check if the installation was successful
+        #Checks if the installation was successful
         if result.returncode == 0:
             print("installed successfully.")
         else:
@@ -82,10 +121,11 @@ def installForALL():
 
     if os.path.exists(requirements_path):
         print(f"Installing dependencies from {requirements_path}...")
-        # Run the pip install command
+
+        #Runs the pip install command
         result = subprocess.run([sys.executable, "-m", "pip", "install", "-r", requirements_path], capture_output=True, text=True)
         
-        # Check if the installation was successful
+        #Checks if the installation was successful
         if result.returncode == 0:
             status_label.config(text="Dependencies Installed succesfully")
         else:
@@ -93,7 +133,7 @@ def installForALL():
     else:
         print(f"Error: requirements.txt not found at {requirements_path}")    
 
-#Terminates any example
+#Terminates any example with the press of the "Stop" Button
 lease_client = None
 lease = None
 
@@ -102,12 +142,12 @@ def stopProgram():
     if current_process:
         try:
             current_process.terminate()
-            current_process.wait()  # Wait for the process to terminate
+            current_process.wait()  
             current_process = None
             status_label.config(text="Program Stopped")
             print("Process terminated successfully.")
 
-            # Releases the lease after stopping the process
+            # Release the lease after stopping the process
             if lease_client and lease:
                 lease_client.return_lease(lease)
                 print("Lease returned.")
@@ -293,33 +333,15 @@ def selectedEvent(event):
         canvas.create_text(155, 225, text="  Demonstrates how to query the\nrobot state service for the\nhardware config, the current robot\nstate, or the robot metrics.", fill="black", font=("Arial", 14), tags="label_text")
     elif selected_option in ["Get Front Left Image", "Get Front Left Image", "Get Front Right Image"]:
         canvas.create_text(155, 225, text="  Can be used to create popup\nwindows which show a live preview\nof the image sources specified.", fill="black", font=("Arial", 13), tags="label_text")
-    elif selected_option == "Get World Objects":
-        canvas.create_text(155, 235, text=" Demonstrates how to use the world\n object service to list the objects\n Spot can detect, and filter\nthese lists for specific objects\nor objects after a certain time stamp. ", fill="black", font=("Arial", 13), tags="label_text")
     elif selected_option in ["Get Fron", "Get Front Left Image", "Get Front Right Image"]:
         canvas.create_text(155, 225, text="  Can be used to create popup\nwindows which show a live preview\nof the image sources specified.", fill="black", font=("Arial", 13), tags="label_text")
-    elif selected_option == 'Get Mission State':
-        canvas.create_text(153, 225, text="  Demonstrates how to retrieve\ninformation about the state of the\ncurrently-running mission.", fill="black", font=("Arial", 14), tags="label_text")
-    elif selected_option == 'Time Sync':
-        canvas.create_text(160, 225, text=" Demonstrates how to use the timesync service\nto establish time sync between your computer\nand the robot’s clock. Specifically, it creates\na TimeSyncEndpoint, which can be used to\nestablish timesync as well as determine the\nclockskew or round trip time.", fill="black", font=("Arial", 10), tags="label_text")
-    elif selected_option == 'Comms Test':
-        canvas.create_text(155, 215, text="  Demonstrates how to use the SDK to\nperform comms testing. This is meant to\nbe run on a CORE I/O during an\nAutowalk mission.", fill="black", font=("Arial", 11), tags="label_text")
-    elif selected_option in ["IR Enable", "IR Disable"]:
-        canvas.create_text(158, 225, text="  Demonstrates how to use the\nIREnableDisableServiceClient to\nenable/disable the robot’s IR light\nemitters in the body and hand sensors.", fill="black", font=("Arial", 12), tags="label_text")
-    elif selected_option == 'Reset Safety Stop':
-        canvas.create_text(160, 225, text=" Resets the primary and redundant\nsafety stops on a robot configured\nfor Safety-Related Stopping\nFunction (SRSF)", fill="black", font=("Arial", 12), tags="label_text")
-    elif selected_option == 'Spotlight':
-        canvas.create_text(153, 225, text="  Will allow Spot to respond to a light\nshining in its front left camera", fill="black", font=("Arial", 12), tags="label_text")
-    elif selected_option == 'Visualizer':
-        canvas.create_text(153, 225, text=" Visualizes Spot’s perception scene\nin a consistent coordinate frame.\nIt demonstrates:", fill="black", font=("Arial", 12), tags="label_text")
-    elif selected_option == 'WASD':
-        canvas.create_text(153, 225, text=" Creates an interface for operating\nSpot with your keyboard", fill="black", font=("Arial", 12), tags="label_text")
     else:
-        canvas.create_text(145, 200, text="No Description found.", fill="black", font=("Arial", 16), tags="label_text")
+        canvas.create_text(115, 200, text="No Description found.", fill="black", font=("Arial", 16), tags="label_text")
 
 
 #Main
 def mainInterface():
-    global status_label, clicked, current_process, canvas
+    global status_label, battery_label, clicked, current_process, canvas
     root = tk.Tk()
 
     #GUI Size
@@ -341,10 +363,10 @@ def mainInterface():
     #Sets the background image on the canvas
     canvas.create_image(0, 0, image=bg_image, anchor="nw")
 
-    # Add header on the canvas
+    #Adds header on the canvas
     canvas.create_text(250, 30, text="Spot Programs", font=('Arial', 28), fill="white")
 
-    # Options for Dropdown
+    # ptions for Dropdown menu
     options = [
         "Hello Spot",
         "Directory",
@@ -360,38 +382,42 @@ def mainInterface():
         "IR Enable",
         "IR Disable",
         "Reset Safety Stop",
-        "Visualizer",
         "Spotlight",
         "WASD"
     ]
 
-    # Programs Dropdown Menu
+    #Programs Dropdown Menu
     clicked = StringVar()
     clicked.set(options[0])
     programs = tk.OptionMenu(root, clicked, *options, command= selectedEvent)
     programs_window = canvas.create_window(150, 130, width=225, height=60, window=programs)
 
-    # Run Button
+    #Run Button
     run = tk.Button(root, text="Run", font=('arial', 16), command=runSelectedProgram, background='#2dcc67')
     canvas.create_window(400, 150, width=150, height=100, window=run)
 
-    # Stop Button
+    #Stop Button
     stop = tk.Button(root, text="Stop Program", font=('arial', 16), command=stopProgram, background='#cc622d')
     canvas.create_window(400, 400, width=150, height=100, window=stop)
 
-    # Start EStop Button
+    #Start EStop Button
     eStop = tk.Button(root, text="Start EStop", font=('arial', 16), command=startEStop, background='#b81d1d')
     canvas.create_window(400, 275, width=150, height=100, window=eStop)
 
-    # Current status of program label
+    #Current status of program label
     status_label = tk.Label(root, text="", font=('Arial', 12), fg="blue", background="white")
     canvas.create_window(250, 75, window=status_label)
+    
+    battery_label = tk.Label(root, text="", font=('Arial', 12), fg="red", background="white")
+    canvas.create_window(435, 35, window=battery_label)
 
+
+    check_battery_status(root)
     root.mainloop()
 
 
 
-# Create the login window
+#Creates the login window for user to put in credentials
 def createLoginWindow():
     global login_window
     login_window = tk.Tk()
@@ -417,13 +443,13 @@ def createLoginWindow():
         ip = ip_entry.get()
         run_with_inputs(username, password, ip)
 
-    # Login button
+    #Login button
     login_button = tk.Button(login_window, text="Login", command=on_login)
     login_button.pack(pady=20)
 
     login_window.mainloop()
 
-# Start with login window
+#Starts with login window
 createLoginWindow()
 
 
