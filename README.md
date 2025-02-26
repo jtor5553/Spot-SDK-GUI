@@ -29,20 +29,20 @@ Ensure you have Python 3.6-3.10 and PIP installed. If you do not have Python ins
 
 **Programs Available**
 """"
-Hello Spot
-Directory Client
-Get Robot State
-Get Robot Hardware
-Get Robot Metrics
-Get Front Left Image
-Get Front Right Image
-Get Mission State
-Time Sync
-Comms Test
-IR Enable/Disable
-Reset Safety Stop
-Spotlight
-WASD
+Hello Spot,
+Directory Client,
+Get Robot State,
+Get Robot Hardware,
+Get Robot Metrics,
+Get Front Left Image,
+Get Front Right Image,
+Get Mission State,
+Time Sync,
+Comms Test,
+IR Enable/Disable,
+Reset Safety Stop,
+Spotlight,
+WASD,
 """"
 
 **How to Use GUI**
