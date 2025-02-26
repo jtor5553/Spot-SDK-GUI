@@ -13,6 +13,8 @@ This is a graphical user interface (GUI) built to control Spot, Boston Dynamics'
 *Prerequisites*
 Ensure you have Python 3.6-3.10 and PIP installed. If you do not have Python installed, you can download and install it from the official Python website.
 
+**MAKE SURE THAT SPOT_GUI AND SPOT_SDK ARE IN A DIRECTORY TOGETHER. BEST WAY TO DO THIS IS BY DOWNLOADING THERE FOLDER INTO A FOLDER TOGETHER**---IMPORTANT
+
 ***INSTALL SPOT_SDK at https://dev.bostondynamics.com/docs/python/quickstart#system-requirements***
 
 **Additional Packages**
