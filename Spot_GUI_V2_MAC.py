@@ -327,7 +327,7 @@ def selectedEvent(event):
     elif selected_option == "Spotlight":
         canvas.create_text(155, 225, text="  Spot will follow light with his head\n if shined in his front left camera.", fill="black", font=("Arial", 17), tags="label_text")
     elif selected_option == "WASD":
-        canvas.create_text(155, 225, text="  Controls Spot with your keyboar.", fill="black", font=("Arial", 18), tags="label_text")
+        canvas.create_text(155, 225, text="  Controls Spot with your keyboard.", fill="black", font=("Arial", 18), tags="label_text")
     else:
         canvas.create_text(115, 200, text="No Description found.", fill="black", font=("Arial", 16), tags="label_text")
 
