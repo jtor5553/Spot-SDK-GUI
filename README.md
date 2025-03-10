@@ -1,4 +1,4 @@
-# Spot SDK GUI Version 1.30, 2/26/2025
+# Spot SDK GUI Version 1.40, 3/10/2025
 
 **Overview**
 This is a graphical user interface (GUI) built to control Spot, Boston Dynamics' robotic dog. This GUI makes it easier to run the examples from the Spot-SDK. With one click of a button, you can run the examples. It installs the dependencies for you and doesn't require a username or password except when booting. It will also display battery life on the top right so users stay informed. 
