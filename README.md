@@ -59,6 +59,9 @@ If they are not correct nothing will work on the GUI and you will get errors.
 
 *Battery Status*: The battery status of Spot will be displayed on the top right corner of the GUI. If it is not there was either an error with the credentials or connecting to Spot.
 
+**Troubleshooting**
+***pip install grpcio==1.60.1**
+
 
 
 AUTHOR: Jose Torres-Gomez
