@@ -8,12 +8,7 @@ from PIL import Image, ImageTk
 from bosdyn.client.lease import LeaseClient
 from bosdyn.client.robot_state import RobotStateClient
 from tkmacosx import Button
-import atexit
-import os
 
-# Suppress logging warnings
-os.environ["GRPC_VERBOSITY"] = "ERROR"
-os.environ["GLOG_minloglevel"] = "2"
 
 
 #Global variables
@@ -22,11 +17,6 @@ requiredFiles = "requirements.txt"
 current_process = None
 IP = None
 
-#Ensures clean shutdown of gRPC connections
-def shutdown_grpc():
-    bosdyn.client.util.cleanup()
-
-atexit.register(shutdown_grpc)
 
 #Verify robot connection
 def verify_robot_connection(robot):
@@ -73,7 +63,7 @@ def check_battery_status(root):
 
     root.after(60000, check_battery_status, root)
 
-# Installs Requirements.txt file for estop
+#Installs Requirements.txt file for estop
 def installForEstop():
     current_directory = os.path.dirname(os.path.abspath(__file__))  
     parent_directory = os.path.dirname(current_directory)  
@@ -92,7 +82,7 @@ def installForEstop():
     else:
         print(f"Error: requirements.txt not found at {requirements_path}")
 
-# Installs all the requirements from the txt file
+#Installs all the requirements from the txt file
 def installForALL():
     global status_label, clicked, current_process
     install = clicked.get()
@@ -146,7 +136,7 @@ def installForALL():
     else:
         print(f"Error: requirements.txt not found at {requirements_path}")    
 
-# Terminates any example with the press of the "Stop" Button
+#Terminates any example with the press of the "Stop" Button
 lease_client = None
 lease = None
 
@@ -172,7 +162,7 @@ def stopProgram():
         status_label.config(text="No program is currently running")
         print("No program is currently running")
 
-# Starts the Estop
+#Starts the Estop
 def startEStop():
     current_directory = os.path.dirname(os.path.abspath(__file__))
     parent_directory = os.path.dirname(current_directory)
@@ -185,7 +175,7 @@ def startEStop():
     else:
         status_label.config(text="E-stop not found")
 
-# User decides what program to run from the dropdown menu
+#User decides what program to run from the dropdown menu
 def runSelectedProgram():
     global status_label, clicked, current_process
     selected = clicked.get()
@@ -315,19 +305,33 @@ def selectedEvent(event):
     canvas.create_rectangle(box_x1, box_y1, box_x2, box_y2, fill="white", outline="black", tags="text_box")
 
     if selected_option == 'Hello Spot':
-        canvas.create_text(153, 225, text="  Spot will stand up, strike a\npose, stand tall, sit down, and\ncapture an image from a\ncamera", fill="black", font=("Arial", 16), tags="label_text")
+        canvas.create_text(153, 225, text="  Spot will stand up, strike a\npose, stand tall, sit down, and\ncapture an image from a\ncamera", fill="black", font=("Arial", 17), tags="label_text")
     elif selected_option == 'Directory':
         canvas.create_text(155, 225, text="  This example demonstrates how\nto use Spot’s Directory Client to\nlist, register, update, and remove\ninformation about API services.", fill="black", font =("Arial", 14), tags="label_text")
     elif selected_option in ["Get Robot State", "Get Robot Hardware", "Get Robot Metrics"]:
         canvas.create_text(155, 225, text="  Demonstrates how to query the\nrobot state service for the\nhardware config, the current robot\nstate, or the robot metrics.", fill="black", font=("Arial", 14), tags="label_text")
     elif selected_option in ["Get Front Left Image", "Get Front Right Image"]:
         canvas.create_text(155, 225, text="  Can be used to create popup\nwindows which show a live preview\nof the image sources specified.", fill="black", font=("Arial", 13), tags="label_text")
-    elif selected_option in ["Get Fron", "Get Front Left Image", "Get Front Right Image"]:
-        canvas.create_text(155, 225, text="  Can be used to create popup\nwindows which show a live preview\nof the image sources specified.", fill="black", font=("Arial", 13), tags="label_text")
+    elif selected_option == "Get World Objects":
+        canvas.create_text(155, 225, text="  Demonstrates how to use the\nworld object service to list objects\nSpot can detect, and filter these\nlists for specific objects.", fill="black", font=("Arial", 15), tags="label_text")
+    elif selected_option == "Get Mission State":
+        canvas.create_text(155, 225, text="  Demonstrates how retrieve information\nabout the state of the on going\nmission (Mission must be running)", fill="black", font=("Arial", 15), tags="label_text")
+    elif selected_option == "Time Sync":
+        canvas.create_text(155, 225, text="  Demonstrates how to use the timesync\nservice to establish time sync between\nyour computer and the robots clock", fill="black", font=("Arial", 15), tags="label_text")
+    elif selected_option == "Comms Test":
+        canvas.create_text(155, 225, text="  Demonstrates how to use the SDK to\nperform comms testing. (Meant to be run\non a CORE I/O during an autowalk\nmission)", fill="black", font=("Arial", 15), tags="label_text")
+    elif selected_option in ["IR Enable", "IR Disable"]:
+        canvas.create_text(155, 225, text="  Demonstrates how to enable or\ndisable the robots IR light emmiters\nin the body and hand", fill="black", font=("Arial", 16), tags="label_text")
+    elif selected_option == "Reset Safety Stop":
+        canvas.create_text(155, 225, text="  Resets the safety stop (Robot must be\nSRSF ENABLED))", fill="black", font=("Arial", 16), tags="label_text")
+    elif selected_option == "Spotlight":
+        canvas.create_text(155, 225, text="  Spot will follow light with his head\n if shined in his front left camera.", fill="black", font=("Arial", 17), tags="label_text")
+    elif selected_option == "WASD":
+        canvas.create_text(155, 225, text="  Controls Spot with your keyboar.", fill="black", font=("Arial", 18), tags="label_text")
     else:
         canvas.create_text(115, 200, text="No Description found.", fill="black", font=("Arial", 16), tags="label_text")
 
-#Main GUI
+#Main GUIs
 def mainInterface():
     global status_label, battery_label, clicked, current_process, canvas, IP
     root = tk.Tk()
