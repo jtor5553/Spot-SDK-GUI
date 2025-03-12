@@ -15,7 +15,7 @@ Ensure you have Python 3.6-3.10 and PIP installed. If you do not have Python ins
 
 **MAKE SURE THAT SPOT_GUI AND SPOT_SDK ARE IN A DIRECTORY TOGETHER. BEST WAY TO DO THIS IS BY DOWNLOADING THERE FOLDER INTO A FOLDER TOGETHER**---IMPORTANT
 
-***INSTALL SPOT_SDK at https://dev.bostondynamics.com/docs/python/quickstart#system-requirements***
+***INSTALL spot-sdk-4.0.3 at https://dev.bostondynamics.com/docs/python/quickstart#system-requirements***
 
 **Additional Packages**
 ***pip**, instrctions above.
