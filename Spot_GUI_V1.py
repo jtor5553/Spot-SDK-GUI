@@ -5,8 +5,11 @@ from tkinter import *
 import subprocess, subprocess, sys, os
 from tkinter import PhotoImage
 from PIL import Image, ImageTk
-from bosdyn.client.lease import LeaseClient
+from bosdyn.client.lease import LeaseClient, LeaseKeepAlive
 from bosdyn.client.robot_state import RobotStateClient
+from bosdyn.client import create_standard_sdk
+from bosdyn.client.robot import Robot
+
 
 
 
@@ -137,22 +140,32 @@ def installForALL():
 lease_client = None
 lease = None
 
+def take_lease(): 
+    sdk = create_standard_sdk("LeaseRelease")
+    robot = sdk.create_robot(IP)
+    lease_client = robot.ensure_client(LeaseClient.default_service_name)
+
+    try:# Take lease
+        lease = lease_client.take()
+        print("Lease successfully taken.")
+            
+    finally:
+        # Release lease after taking it
+        lease_client.return_lease(lease)
+        print("Lease returned.")
+
 def stopProgram():
     global current_process, status_label, lease_client, lease
     if current_process:
+        take_lease()
         try:
             current_process.terminate()
             current_process.wait()  
             current_process = None
             status_label.config(text="Program Stopped")
-            print("Process terminated successfully.")
 
-            # Release the lease after stopping the process
-            if lease_client and lease:
-                lease_client.return_lease(lease)
-                print("Lease returned.")
-                lease = None
-                lease_client = None
+            
+            print("Process terminated successfully.")
         except Exception as e:
             status_label.config(text=f"Error stopping process: {str(e)}")
             print(f"Error stopping process: {str(e)}")
@@ -326,15 +339,31 @@ def selectedEvent(event):
 
     # Display appropriate text over the white box
     if selected_option == 'Hello Spot':
-        canvas.create_text(153, 225, text="  Spot will stand up, strike a\npose, stand tall, sit down, and\ncapture an image from a\ncamera", fill="black", font=("Arial", 16), tags="label_text")
+        canvas.create_text(153, 225, text="  Spot will stand up, strike a\npose, stand tall, sit down, and\ncapture an image from a\ncamera", fill="black", font=("Arial", 15), tags="label_text")
     elif selected_option == 'Directory':
-        canvas.create_text(155, 225, text="  This example demonstrates how\nto use Spot’s Directory Client to\nlist, register, update, and remove\ninformation about API services.", fill="black", font =("Arial", 14), tags="label_text")
+        canvas.create_text(155, 225, text="  This example demonstrates how\nto use Spot’s Directory Client to\nlist, register, update, and remove\ninformation about API services.", fill="black", font =("Arial", 13), tags="label_text")
     elif selected_option in ["Get Robot State", "Get Robot Hardware", "Get Robot Metrics"]:
-        canvas.create_text(155, 225, text="  Demonstrates how to query the\nrobot state service for the\nhardware config, the current robot\nstate, or the robot metrics.", fill="black", font=("Arial", 14), tags="label_text")
+        canvas.create_text(155, 225, text="  Demonstrates how to query the\nrobot state service for the\nhardware config, the current robot\nstate, or the robot metrics.", fill="black", font=("Arial", 12), tags="label_text")
     elif selected_option in ["Get Front Left Image", "Get Front Left Image", "Get Front Right Image"]:
         canvas.create_text(155, 225, text="  Can be used to create popup\nwindows which show a live preview\nof the image sources specified.", fill="black", font=("Arial", 13), tags="label_text")
     elif selected_option in ["Get Fron", "Get Front Left Image", "Get Front Right Image"]:
         canvas.create_text(155, 225, text="  Can be used to create popup\nwindows which show a live preview\nof the image sources specified.", fill="black", font=("Arial", 13), tags="label_text")
+    elif selected_option == "Get World Objects":
+        canvas.create_text(155, 225, text="  Demonstrates how to use the\nworld object service to list objects\nSpot can detect, and filter these\nlists for specific objects.", fill="black", font=("Arial", 12), tags="label_text")
+    elif selected_option == "Get Mission State":
+        canvas.create_text(155, 225, text="  Demonstrates how retrieve information\nabout the state of the on going\nmission (Mission must be running)", fill="black", font=("Arial", 12), tags="label_text")
+    elif selected_option == "Time Sync":
+        canvas.create_text(155, 225, text="  Demonstrates how to use the timesync\nservice to establish time sync between\nyour computer and the robots clock", fill="black", font=("Arial", 12), tags="label_text")
+    elif selected_option == "Comms Test":
+        canvas.create_text(155, 225, text="  Demonstrates how to use the SDK to\nperform comms testing. (Meant to be run\non a CORE I/O during an autowalk\nmission)", fill="black", font=("Arial", 12), tags="label_text")
+    elif selected_option in ["IR Enable", "IR Disable"]:
+        canvas.create_text(155, 225, text="  Demonstrates how to enable or\ndisable the robots IR light emmiters\nin the body and hand", fill="black", font=("Arial", 13), tags="label_text")
+    elif selected_option == "Reset Safety Stop":
+        canvas.create_text(155, 225, text="  Resets the safety stop (Robot must be\nSRSF ENABLED))", fill="black", font=("Arial", 13), tags="label_text")
+    elif selected_option == "Spotlight":
+        canvas.create_text(155, 225, text="  Spot will follow light with his head\n if shined in his front left camera.", fill="black", font=("Arial", 14), tags="label_text")
+    elif selected_option == "WASD":
+        canvas.create_text(155, 225, text="  Controls Spot with your keyboard.", fill="black", font=("Arial", 13), tags="label_text")
     else:
         canvas.create_text(115, 200, text="No Description found.", fill="black", font=("Arial", 16), tags="label_text")
 
